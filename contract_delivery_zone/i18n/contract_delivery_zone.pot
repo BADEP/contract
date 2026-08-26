@@ -4,8 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 14.0\n"
+"Project-Id-Version: Odoo Server 19.0+e\n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-03 12:26+0000\n"
+"PO-Revision-Date: 2026-09-03 12:26+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -34,11 +36,6 @@ msgid "ID"
 msgstr ""
 
 #. module: contract_delivery_zone
-#: model:ir.model.fields,field_description:contract_delivery_zone.field_contract_contract____last_update
-msgid "Last Modified on"
-msgstr ""
-
-#. module: contract_delivery_zone
 #: model:ir.model.fields,field_description:contract_delivery_zone.field_contract_contract__partner_delivery_zone_id
 msgid "Partner Delivery Zone"
 msgstr ""
@@ -46,6 +43,6 @@ msgstr ""
 #. module: contract_delivery_zone
 #: model:ir.model.fields,help:contract_delivery_zone.field_contract_contract__partner_delivery_zone_id
 msgid ""
-"This is the partner delivery zone. If you modify this here, itwill be "
-"modified on partner too."
+"This is the partner delivery zone. If empty, the partner's delivery zone "
+"will be used on the contract."
 msgstr ""
