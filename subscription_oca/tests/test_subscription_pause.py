@@ -14,6 +14,8 @@ from odoo.addons.product.tests.common import ProductCommon
 
 
 class TestSubscriptionPause(ProductCommon, BaseCommon):
+    _test_user_groups = None
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

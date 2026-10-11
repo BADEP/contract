@@ -7,10 +7,8 @@ from odoo import fields, models
 class AccountMove(models.Model):
     _inherit = "account.move"
 
-    subscription_id = fields.Many2one(
-        comodel_name="sale.subscription", string="Subscription"
-    )
+    subscription_id = fields.Many2one(comodel_name="sale.subscription")
 
     def action_open_subscription(self):
         self.ensure_one()
-        return self.subscription_id.get_formview_action()
+        return self.subscription_id.get_record_default_action()

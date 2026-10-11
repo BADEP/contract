@@ -1,7 +1,6 @@
 # Copyright 2023 Domatix - Carlos Martínez
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 from collections import defaultdict
-from datetime import date
 
 from dateutil.relativedelta import relativedelta
 
@@ -43,7 +42,7 @@ class SaleOrder(models.Model):
         }
 
     def get_next_interval(self, type_interval, interval):
-        date_start = date.today()
+        date_start = fields.Date.today()
         date_start += relativedelta(**{type_interval: interval})
         return date_start
 
@@ -74,7 +73,7 @@ class SaleOrder(models.Model):
                     "user_id": self.env.context.get("uid", self.env.uid),
                     "template_id": subscription_tmpl.id,
                     "pricelist_id": pricelist.id,
-                    "date_start": date.today(),
+                    "date_start": fields.Date.today(),
                     "sale_order_id": self.id,
                     "sale_subscription_line_ids": subscription_lines,
                 }

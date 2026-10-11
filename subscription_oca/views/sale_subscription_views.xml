@@ -340,7 +340,7 @@
                                         <span t-if="record.partner_id.value">,</span>
                                     </t>
                                     <span t-if="record.partner_id.value">
-                                        <t t-esc="record.partner_id.value" />
+                                        <t t-out="record.partner_id.value" />
                                     </span>
                                 </div>
 

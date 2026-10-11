@@ -15,6 +15,8 @@ class TestSubscriptionRecurrenceDates(ProductCommon, BaseCommon):
     the produced date is wrong, not that the formula was merely re-typed.
     """
 
+    _test_user_groups = None
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

@@ -1,6 +1,7 @@
 # Copyright 2023 Domatix - Carlos Martínez
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 import logging
+import typing
 from datetime import date, datetime
 
 from dateutil.relativedelta import relativedelta
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 class SaleSubscription(models.Model):
     _name = "sale.subscription"
     _description = "Subscription"
-    _inherit = ["mail.thread", "mail.activity.mixin"]
+    _inherit: typing.ClassVar[list[str]] = ["mail.thread", "mail.activity.mixin"]
     _order = "id desc"
 
     color = fields.Integer("Color Index")
@@ -26,14 +27,11 @@ class SaleSubscription(models.Model):
     sequence = fields.Integer()
     company_id = fields.Many2one(
         "res.company",
-        "Company",
         required=True,
         index=True,
         default=lambda self: self.env.company,
     )
-    partner_id = fields.Many2one(
-        comodel_name="res.partner", required=True, string="Partner", index=True
-    )
+    partner_id = fields.Many2one(comodel_name="res.partner", required=True, index=True)
     partner_invoice_id = fields.Many2one(
         comodel_name="res.partner",
         string="Invoice address",
@@ -54,7 +52,6 @@ class SaleSubscription(models.Model):
     )
     fiscal_position_id = fields.Many2one(
         "account.fiscal.position",
-        string="Fiscal Position",
         domain="[('company_id', '=', company_id)]",
         check_company=True,
     )
@@ -72,16 +69,16 @@ class SaleSubscription(models.Model):
     recurring_rule_boundary = fields.Boolean(
         string="Boundary", compute="_compute_rule_boundary", store=True
     )
-    pricelist_id = fields.Many2one(
-        comodel_name="product.pricelist", required=True, string="Pricelist"
+    pricelist_id = fields.Many2one(comodel_name="product.pricelist", required=True)
+    recurring_next_date = fields.Date(
+        string="Next invoice date", default=fields.Date.today()
     )
-    recurring_next_date = fields.Date(string="Next invoice date", default=date.today())
     user_id = fields.Many2one(
         comodel_name="res.users",
         string="Commercial agent",
         default=lambda self: self.env.user.id,
     )
-    date_start = fields.Date(string="Start date", default=date.today())
+    date_start = fields.Date(string="Start date", default=fields.Date.today())
     date = fields.Date(
         string="Finish date",
         compute="_compute_rule_boundary",
@@ -115,7 +112,7 @@ class SaleSubscription(models.Model):
     amount_total = fields.Monetary(compute="_compute_total", store=True)
     tag_ids = fields.Many2many(comodel_name="sale.subscription.tag", string="Tags")
     image = fields.Binary("Image", related="user_id.image_512", store=True)
-    journal_id = fields.Many2one(comodel_name="account.journal", string="Journal")
+    journal_id = fields.Many2one(comodel_name="account.journal")
     currency_id = fields.Many2one(
         related="pricelist_id.currency_id",
         depends=["pricelist_id"],
@@ -125,12 +122,10 @@ class SaleSubscription(models.Model):
 
     @api.model
     def _read_group_stage_ids(self, stages, domain):
-        stage_ids = stages.search(domain, order=stages._order)
-        return stage_ids
+        return stages.search(domain, order=stages._order)
 
     stage_id = fields.Many2one(
         comodel_name="sale.subscription.stage",
-        string="Stage",
         tracking=True,
         group_expand="_read_group_stage_ids",
         store=True,
@@ -148,9 +143,7 @@ class SaleSubscription(models.Model):
     account_invoice_ids_count = fields.Integer(
         compute="_compute_account_invoice_ids_count", string="Invoice Count"
     )
-    close_reason_id = fields.Many2one(
-        comodel_name="sale.subscription.close.reason", string="Close Reason"
-    )
+    close_reason_id = fields.Many2one(comodel_name="sale.subscription.close.reason")
     crm_team_id = fields.Many2one(comodel_name="crm.team", string="Sale team")
     to_renew = fields.Boolean(default=False, string="To renew")
     is_paused = fields.Boolean(
@@ -172,7 +165,7 @@ class SaleSubscription(models.Model):
     @api.model
     def cron_subscription_management(self):
         self._cron_resume_due_subscriptions()
-        today = date.today()
+        today = fields.Date.today()
         subscription_count = self.search_count([])
         for subscription in self.search(
             [], order="recurring_next_date asc", limit=subscription_count
@@ -236,8 +229,8 @@ class SaleSubscription(models.Model):
     @api.depends("template_id", "code")
     def _compute_name(self):
         for record in self:
-            template_code = record.template_id.code if record.template_id.code else ""
-            code = record.code if record.code else ""
+            template_code = record.template_id.code or ""
+            code = record.code or ""
             slash = "/" if template_code and code else ""
             record.name = f"{template_code}{slash}{code}"
 
@@ -263,7 +256,7 @@ class SaleSubscription(models.Model):
 
     @api.onchange("template_id", "date_start")
     def _onchange_template_id(self):
-        today = date.today()
+        today = fields.Date.today()
         if self.date_start:
             today = self.date_start
         if self.template_id and self.account_invoice_ids_count > 0:
@@ -416,7 +409,7 @@ class SaleSubscription(models.Model):
             "partner_shipping_id": (self.partner_shipping_id.id or self.partner_id.id),
             "pricelist_id": self.pricelist_id.id,
             "fiscal_position_id": self.fiscal_position_id.id,
-            "date_order": datetime.now(),
+            "date_order": fields.Datetime.now(),
             "payment_term_id": self.partner_id.property_payment_term_id.id,
             "user_id": self.user_id.id,
             "origin": self.name,
@@ -457,13 +450,12 @@ class SaleSubscription(models.Model):
             line_values = line._prepare_account_move_line()
             line_ids.append(Command.create(line_values))
         invoice_values = self._prepare_account_move(line_ids)
-        invoice_id = (
+        return (
             self.env["account.move"]
             .sudo()
             .with_context(default_move_type="out_invoice", journal_type="sale")
             .create(invoice_values)
         )
-        return invoice_id
 
     def create_sale_order(self):
         if not self.env["sale.order"].has_access("create"):
@@ -605,7 +597,7 @@ class SaleSubscription(models.Model):
                 if record.stage_id:
                     if record.stage_id.type == "in_progress":
                         record.in_progress = True
-                        today = date.today()
+                        today = fields.Date.today()
                         record.date_start = today
                         record.calculate_recurring_next_date(today)
                     elif record.stage_id.type == "post":
@@ -619,15 +611,17 @@ class SaleSubscription(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for values in vals_list:
-            if "recurring_rule_boundary" in values:
-                if not values["recurring_rule_boundary"]:
-                    template_id = self.env["sale.subscription.template"].browse(
-                        values["template_id"]
-                    )
-                    date_start = values["date_start"]
-                    if not isinstance(values["date_start"], date):
-                        date_start = fields.Date.to_date(values["date_start"])
-                    values["date"] = template_id._get_date(date_start)
+            if (
+                "recurring_rule_boundary" in values
+                and not values["recurring_rule_boundary"]
+            ):
+                template_id = self.env["sale.subscription.template"].browse(
+                    values["template_id"]
+                )
+                date_start = values["date_start"]
+                if not isinstance(values["date_start"], date):
+                    date_start = fields.Date.to_date(values["date_start"])
+                values["date"] = template_id._get_date(date_start)
             if "date_start" in values and "recurring_next_date" in values:
                 res = self._check_dates(
                     values["date_start"], values["recurring_next_date"]
