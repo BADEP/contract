@@ -5,6 +5,8 @@ from odoo.addons.contract.tests.test_contract import TestContractBase
 
 
 class TestContractAutoValidate(TestContractBase):
+    _test_user_groups = None
+
     def test_contract_invoice_auto_validate_1(self):
         contracts = self.contract2
         invoice = contracts._recurring_create_invoice()
