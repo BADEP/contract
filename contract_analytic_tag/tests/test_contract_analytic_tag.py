@@ -4,6 +4,8 @@ from odoo.addons.contract.tests.test_contract import TestContractBase
 
 
 class TestContractAnalyticTag(TestContractBase):
+    _test_user_groups = None
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
