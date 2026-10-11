@@ -1,7 +1,7 @@
 # Copyright 2020 Tecnativa - Víctor Martínez
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl)
 
-from odoo import http
+from odoo.http.session import session_store
 from odoo.tests import HttpCase, tagged
 from odoo.tools import mute_logger
 
@@ -10,6 +10,8 @@ from odoo.addons.base.tests.common import BaseCommon
 
 @tagged("post_install", "-at_install")
 class TestContractPortal(HttpCase, BaseCommon):
+    _test_user_groups = None
+
     @mute_logger(
         "odoo.addons.contract.tests.test_portal.TestContractPortal.test_tour.browser"
     )
@@ -24,7 +26,7 @@ class TestContractPortal(HttpCase, BaseCommon):
         self.start_tour("/", "contract_portal_tour", login="portal_contract")
         # Contract access
         self.authenticate("portal_contract", "portal_contract")
-        http.root.session_store.save(self.session)
+        session_store().save(self.session)
         url_contract = (
             f"/my/contracts/{contract.id}?access_token={contract.access_token}"
         )
