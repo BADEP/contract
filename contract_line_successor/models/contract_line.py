@@ -22,7 +22,6 @@ class ContractLine(models.Model):
     )
     successor_contract_line_id = fields.Many2one(
         comodel_name="contract.line",
-        string="Successor Contract Line",
         required=False,
         readonly=True,
         index=True,
@@ -32,7 +31,6 @@ class ContractLine(models.Model):
     )
     predecessor_contract_line_id = fields.Many2one(
         comodel_name="contract.line",
-        string="Predecessor Contract Line",
         required=False,
         readonly=True,
         index=True,
@@ -174,11 +172,10 @@ class ContractLine(models.Model):
             if (
                 rec.predecessor_contract_line_id
                 and rec.predecessor_contract_line_id.date_end
-            ):
-                if rec.date_start <= rec.predecessor_contract_line_id.date_end:
-                    raise ValidationError(
-                        self.env._("Contract line and its predecessor overlapped")
-                    )
+            ) and rec.date_start <= rec.predecessor_contract_line_id.date_end:
+                raise ValidationError(
+                    self.env._("Contract line and its predecessor overlapped")
+                )
 
     @api.depends(
         "is_canceled",
@@ -299,6 +296,7 @@ class ContractLine(models.Model):
             return [("is_canceled", "=", True)]
         if not state:
             return [("display_type", "!=", False)]
+        return None
 
     @api.model
     def _search_state(self, operator, value):
@@ -342,6 +340,7 @@ class ContractLine(models.Model):
             return self._search_state(
                 "in", [state for state in states if state not in value]
             )
+        return None
 
     @api.model
     def _get_first_date_end(
@@ -392,10 +391,7 @@ class ContractLine(models.Model):
                     )
                 )
             new_date_start = rec.date_start + delay_delta
-            if rec.date_end:
-                new_date_end = rec.date_end + delay_delta
-            else:
-                new_date_end = False
+            new_date_end = rec.date_end + delay_delta if rec.date_end else False
             new_recurring_next_date = self.get_next_invoice_date(
                 new_date_start,
                 rec.recurring_invoicing_type,
@@ -771,20 +767,18 @@ class ContractLine(models.Model):
     def _get_renewal_new_date_end(self):
         self.ensure_one()
         date_start = self.date_end + relativedelta(days=1)
-        date_end = self._get_first_date_end(
+        return self._get_first_date_end(
             date_start, self.auto_renew_rule_type, self.auto_renew_interval
         )
-        return date_end
 
     def _renew_create_line(self, date_end):
         self.ensure_one()
         date_start = self.date_end + relativedelta(days=1)
         is_auto_renew = self.is_auto_renew
         self.stop(self.date_end, post_message=False)
-        new_line = self.plan_successor(
+        return self.plan_successor(
             date_start, date_end, is_auto_renew, post_message=False
         )
-        return new_line
 
     def _renew_extend_line(self, date_end):
         self.ensure_one()
