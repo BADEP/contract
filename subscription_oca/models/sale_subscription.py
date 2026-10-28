@@ -1,7 +1,6 @@
 # Copyright 2023 Domatix - Carlos Martínez
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 import logging
-import typing
 from datetime import date, datetime
 
 from dateutil.relativedelta import relativedelta
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 class SaleSubscription(models.Model):
     _name = "sale.subscription"
     _description = "Subscription"
-    _inherit: typing.ClassVar[list[str]] = ["mail.thread", "mail.activity.mixin"]
+    _inherit = ["mail.thread", "mail.activity.mixin"]  # noqa: RUF012
     _order = "id desc"
 
     color = fields.Integer("Color Index")
