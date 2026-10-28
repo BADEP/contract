@@ -8,6 +8,8 @@ from .test_contract import TestContractBase
 
 
 class ContractMulticompanyCase(TestContractBase):
+    _test_user_groups = None
+
     @classmethod
     @mute_logger("odoo.addons.account.models.chart_template")
     def setUpClass(cls):

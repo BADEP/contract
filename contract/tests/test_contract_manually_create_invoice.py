@@ -10,6 +10,8 @@ from .test_contract import TestContractBase
 
 
 class TestContractManuallyCreateInvoice(TestContractBase):
+    _test_user_groups = None
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -64,6 +66,6 @@ class TestContractManuallyCreateInvoice(TestContractBase):
 
         try:
             wizard.create_invoice()
-        except Exception as e:
+        except UserError as e:
             # The re-raised UserError message is the modified one.
             self.assertTrue(str(e).startswith("Failed to process the contract"))
