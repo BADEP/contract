@@ -8,7 +8,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import logging
-import typing
 
 from markupsafe import Markup
 
@@ -22,7 +21,7 @@ class ContractContract(models.Model):
     _name = "contract.contract"
     _description = "Contract"
     _order = "code, name asc"
-    _inherit: typing.ClassVar[list[str]] = [
+    _inherit = [  # noqa: RUF012
         "contract.template",
         "portal.mixin",
         "mail.thread",

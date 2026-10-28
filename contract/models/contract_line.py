@@ -4,7 +4,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 
-import typing
 import warnings
 
 from dateutil.relativedelta import relativedelta
@@ -27,7 +26,7 @@ _MONTHS_PER_RULE = {
 class ContractLine(models.Model):
     _name = "contract.line"
     _description = "Contract Line"
-    _inherit: typing.ClassVar[list[str]] = [
+    _inherit = [  # noqa: RUF012
         "contract.template.line",
         "analytic.mixin",
     ]

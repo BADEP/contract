@@ -6,8 +6,6 @@
 # Copyright 2018 ACSONE SA/NV
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-import typing
-
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
@@ -19,7 +17,7 @@ class ContractTemplate(models.Model):
     _check_company_auto = True
 
     # Fields not synced to the actual contract
-    NO_SYNC: typing.ClassVar[list[str]] = ["name", "partner_id", "company_id"]
+    NO_SYNC = ["name", "partner_id", "company_id"]  # noqa: RUF012
 
     # === Basic Info ===
 
