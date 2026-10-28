@@ -14,6 +14,8 @@ from odoo.addons.product.tests.common import ProductCommon
 
 
 class TestSubscriptionOCA(ProductCommon, BaseCommon):
+    _test_user_groups = None
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -240,7 +242,7 @@ class TestSubscriptionOCA(ProductCommon, BaseCommon):
             {
                 "pricelist_id": cls.pricelist_l3.id,
                 "applied_on": "0_product_variant",
-                "compute_price": "formula",
+                "compute_price": "markup",
                 "base": "pricelist",
                 "base_pricelist_id": cls.pricelist_l1.id,
                 "product_id": cls.product_1.id,
@@ -250,7 +252,7 @@ class TestSubscriptionOCA(ProductCommon, BaseCommon):
             {
                 "pricelist_id": cls.pricelist_l2.id,
                 "applied_on": "3_global",
-                "compute_price": "formula",
+                "compute_price": "markup",
                 "base": "pricelist",
                 "base_pricelist_id": cls.pricelist_l1.id,
             }
@@ -259,7 +261,7 @@ class TestSubscriptionOCA(ProductCommon, BaseCommon):
             {
                 "pricelist_id": cls.pricelist_l1.id,
                 "applied_on": "3_global",
-                "compute_price": "formula",
+                "compute_price": "markup",
                 "base": "standard_price",
                 "fixed_price": 1000,
             }
@@ -282,8 +284,7 @@ class TestSubscriptionOCA(ProductCommon, BaseCommon):
             ],
         }
         default_vals.update(vals)
-        rec = cls.env["sale.subscription.template"].create(default_vals)
-        return rec
+        return cls.env["sale.subscription.template"].create(default_vals)
 
     @classmethod
     def create_sub(cls, vals):
@@ -297,19 +298,17 @@ class TestSubscriptionOCA(ProductCommon, BaseCommon):
             "fiscal_position_id": cls.fiscal.id,
         }
         default_vals.update(vals)
-        rec = cls.env["sale.subscription"].create(default_vals)
-        return rec
+        return cls.env["sale.subscription"].create(default_vals)
 
     @classmethod
     def create_sub_line(cls, sub, prod=None):
-        ssl = cls.env["sale.subscription.line"].create(
+        return cls.env["sale.subscription.line"].create(
             {
                 "company_id": 1,
                 "sale_subscription_id": sub.id,
                 "product_id": prod or cls.product_1.id,
             }
         )
-        return ssl
 
     @classmethod
     def _create_price_list(cls, name):
@@ -384,9 +383,11 @@ class TestSubscriptionOCA(ProductCommon, BaseCommon):
         # Simulate something failing in generating an invoice,
         # we expect something being logged
         generate_invoice_patch.side_effect = exceptions.UserError("Error")
-        with mute_logger("odoo.addons.subscription_oca.models.sale_subscription"):
-            with self.assertRaises(exceptions.UserError):
-                self.sub1.cron_subscription_management()
+        with (
+            mute_logger("odoo.addons.subscription_oca.models.sale_subscription"),
+            self.assertRaises(exceptions.UserError),
+        ):
+            self.sub1.cron_subscription_management()
 
     def test_subscription_oca_sub_cron(self):
         # sale.subscription
